@@ -1,0 +1,128 @@
+docker network inspect bridge
+docker run -itd --name=container1 busybox
+docker run -itd --name=container2 busybox
+
+docker network disconnect bridge container1
+
+docker network create  myNetwork
+
+docker network ls
+
+docker run -d --net=new_bridge --name db training/postgres
+
+docker inspect --format='{{json .NetworkSettings.Networks}}'  db
+
+docker run -d --name web training/webapp python app.py
+
+docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web
+
+docker network connect new_bridge web
+
+docker inspect --format='{{json .NetworkSettings.Networks.new_bridge}}{{.IPAddress}}{{end}}'  web
+
+
+docker network rm <<network name>>
+
+
+-------------------------------------------
+docker pull nginx
+docker info
+service docker stop
+service docker start
+
+------------------------------------------- DATA VOLUMES ---------------
+docker run -d -P --name web -v /webapp training/webapp python app.py
+docker inspect web
+
+docker volume create --name new_volume
+docker volume inspect new_volume
+docker volume ls
+docker volume prune
+docker volume create --name new_volume1
+docker volume rm new_volume1
+
+Backup-
+
+docker run --rm --volumes-from dbstore -v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /dbdata
+
+Restore-
+
+docker run -v /dbdata --name dbstore2 ubuntu /bin/bash
+docker run --rm --volumes-from dbstore2 -v $(pwd):/backup ubuntu bash -c "cd /dbdata && tar xvf /backup/backup.tar --strip 1"
+
+docker create -v /dbdata --name dbstore training/postgres /bin/true
+
+----------------------------------------DOCKER COMPOSE ---------
+
+curl -L https://github.com/docker/compose/releases/download/1.14.0/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+docker-compose --version
+docker-compose up -d
+docker-compose ps
+
+docker-compose scale web=3
+docker-compose scale web=1
+docker-compose stop
+docker-compose rm
+
+--------------------------------------------------------------
+docker inspect [--help] [-f|--format[=FORMAT]] [-s|--size] [--type] NAME|ID [NAME|ID...]
+docker pull tomcat
+
+docker inspect tomcat
+
+docker inspect --type=image tomcat
+
+
+docker run -d --name tomcatContainer tomcat
+
+docker inspect tomcatContainer
+
+docker inspect -s tomcatContainer
+
+docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tomcatContainer
+
+docker inspect --format='{{range .NetworkSettings.Networks}}{{.MacAddress}}{{end}}' tomcatContainer
+
+
+docker inspect --format='{{.LogPath}}' tomcatContainer
+
+docker inspect --format='{{.Config.Image}}' tomcatContainer
+
+docker inspect --format='{{json .Config}}' tomcatContainer
+
+-------------------------------- DOCKER SWARM ----------------------
+
+docker swarm init
+docker swarm init --advertise-addr <ip-address>
+docker swarm --help
+docker node ls
+docker service create --name testService --replicas 2 --constraint node.labels.disk==ssd tomcat
+docker service create --name http -d --replicas 1 -p 80:80 tomcat
+docker service ls
+docker ps
+docker service ps http
+docker service inspect --pretty 'service-id'/'service-name'
+docker service scale http=3
+docker node ps self
+docker node ps $(docker node ls -q | head -n1)
+docker service rm http
+
+
+docker service create --name lbapp1 --replicas 2 -p 81:80 katacoda/docker-http-server
+
+docker network create -d overlay my-overlay
+
+docker service create \
+  --name nginx \
+  --network testnw \
+  nginx
+
+
+docker service create \
+  --replicas 4 \
+  --name tomcat \
+  --placement-pref 'spread=node.labels.color.red' \
+  tomcat
